@@ -7,11 +7,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
-
-
 
 
 
@@ -68,6 +65,49 @@ public class BookDao implements BookI {
 		      
 	return  out  ;
 	}
+	
+	@Override
+	public  List<Book> BookList(){
+		// TODO Auto-generated method stub
+		String query = "SELECT * FROM book";
+		 List<Book> bist = new ArrayList<Book>();
+	        Connection con = null;
+	        ResultSet rs = null;	
+	        PreparedStatement preparedStatement = null;
+        try{
+        		con = Manager.getConnection();
+        		
+        		  preparedStatement = con.prepareStatement(query);
+        		// execute select SQL Statement
+      			 rs = preparedStatement.executeQuery();
+        	       
+        	       
+	           while(rs.next()){             	 
+	        	   Book b = new Book();            	
+	            	 b.setId((rs.getObject("id")!=null)?Integer.parseInt(rs.getObject("id").toString()):0);	            	
+	            	 b.setTitle((rs.getObject("title")!=null)?rs.getObject("title").toString():null);
+	            	b.setAuthor((rs.getObject("author")!=null)?rs.getObject("author").toString():null);
+	            	b.setPrice((rs.getObject("price")!=null)?Double.parseDouble(rs.getObject("price").toString()):0);
+	            
+	            		            	
+	            	bist.add(b);
+	                 
+	             }
+        }catch(SQLException e){
+            e.printStackTrace();
+        }finally{
+            try {
+                rs.close();
+                con.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        return bist;
+	}
+	
+	
+	
 	
 		
 }
