@@ -111,22 +111,6 @@ CREATE TABLE IF NOT EXISTS `book` (
 	}
 	
 	
-	@SuppressWarnings("unused")
-	public Workbook getWorkbook(String excelFilePath)
-	        throws IOException {
-	    Workbook workbook = null;
-	 
-	    if (excelFilePath.endsWith("xlsx")) {
-	        workbook = new XSSFWorkbook();
-	    } else if (excelFilePath.endsWith("xls")) {
-	        workbook = new HSSFWorkbook();
-	    } else {
-	        throw new IllegalArgumentException("The specified file is not Excel file");
-	    }
-	 
-	    return workbook;
-	}
-	
 		
 	public Workbook getWorkbook(String excelFilePath){
 	    Workbook workbook = null;
@@ -283,3 +267,21 @@ CREATE TABLE IF NOT EXISTS `book` (
 	
 
 ```
+##### Output.java
+```java
+
+metierBook=new BookDao();
+	
+		 try {
+			 	
+		List<Book> listp=metierBook.BookList();
+		 Utiles reader = new Utiles();
+			reader.writeBookListToFile("book.xlsx", listp);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+```
+
+[Apache POI Example – Read and write Excel Formula](http://www.codejava.net/coding/working-with-formula-cells-in-excel-using-apache-poi)
