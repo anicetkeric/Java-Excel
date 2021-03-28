@@ -27,15 +27,23 @@ CREATE TABLE IF NOT EXISTS `book` (
 <dependency>
     <groupId>org.apache.poi</groupId>
     <artifactId>poi</artifactId>
-    <version>3.15</version>
+    <version>3.17</version>
 </dependency>
 
 <!-- https://mvnrepository.com/artifact/org.apache.poi/poi-ooxml -->
 <dependency>
     <groupId>org.apache.poi</groupId>
     <artifactId>poi-ooxml</artifactId>
-    <version>3.15</version>
+    <version>3.17</version>
 </dependency>
+
+<!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
+<dependency>
+    <groupId>mysql</groupId>
+    <artifactId>mysql-connector-java</artifactId>
+    <version>8.0.22</version>
+</dependency>
+
 
 ```
 ### Apache POI example program to read excel file to the list of book and insert in Mysql database.
