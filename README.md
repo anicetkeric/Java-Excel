@@ -1,4 +1,4 @@
-# Java-Excel
+# Java-Excel - Maven Simple Project
 Apache POI – Reading and Writing Excel file in Java
 using Mysql
 
