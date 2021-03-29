@@ -162,44 +162,29 @@ CREATE TABLE IF NOT EXISTS `book` (
 
 ##### Output.java
 ```java
+	private static final String EXCEL_FILE_INPUT_PATH = "book.xlsx";
+	private static final String EXCEL_FILE_OUTPUT_PATH = "book-java.xlsx";
+	private static final IBookDao bookDao = new BookDaoImpl();
 
-	    String excelFilePath = "book.xls";
-	    Utiles reader = new Utiles();
-	    List<Book> listp=null;
-		
-	    	try {
-				
-	    		
-	    		if(reader.getWorkbook(excelFilePath)!=null){
-					
-		    			
-		    			 try {
-		    					
-		    					listp = reader.readBookFromExcelFile(excelFilePath);
-		    					if(listp.size()>0){
-		    						
-		    						for (Book book : listp) {
-		    							metierBook.addBook(book);
-		    						}
-		    						
-		    						System.out.println("Reading the excel file and inserting into the database");
-		    						
-		    					}else System.out.println("File not compatible");
-		    					
-		    				} catch (IOException e) {
-		    					// TODO Auto-generated catch block
-		    					e.printStackTrace();
-		    					System.out.println("Error: "+ e.getMessage());
-		    				}	
-						}
-			
-	    	
-	    	} catch (IOException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
-	    
-	   
+	public static void main(String[] args) {
+		readFile();
+	}
+
+	/**
+	 * read datas in Excel file
+	 */
+	private static void readFile() {
+
+		ExcelFileUtils reader = new ExcelFileUtils();
+		List<Book> books;
+
+		// get All row in file
+		books = reader.readBookFromExcelFile(EXCEL_FILE_INPUT_PATH);
+
+		// inserting into the database
+		books.forEach(bookDao::addBook);
+	}
+		   
 ```
 
 ### Apache POI example program to select records in MySql database to Write Excel File
