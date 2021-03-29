@@ -49,106 +49,113 @@ CREATE TABLE IF NOT EXISTS `book` (
 ### Apache POI example program to read excel file to the list of book and insert in Mysql database.
 
 ```java
-
 	
-	public List<Book> readBookFromExcelFile(String excelFilePath) throws IOException {
-	    List<Book> listb = new ArrayList<>();
-	    FileInputStream inputStream = new FileInputStream(new File(excelFilePath));
-	 
-	    Workbook workbook = new XSSFWorkbook(inputStream);
-	    Sheet firstSheet = workbook.getSheetAt(0);
-	    Iterator<Row> iterator = firstSheet.iterator();
-	   
-	    //get header number
-	    Row header = firstSheet.getRow(0);
-        int n = header.getLastCellNum();
-        String headeridNumber = header.getCell(0).getStringCellValue();
-        String headerTitleNumber = header.getCell(1).getStringCellValue();
-        String headerAuthorNumber = header.getCell(2).getStringCellValue();
-        String headerPriceNumber = header.getCell(3).getStringCellValue();
-	   
-        
-        if (headerTitleNumber.equals("Title") && headerAuthorNumber.equals("Author") && headerPriceNumber.equals("Price")) {
-        	
+	private static final EnumMap<CellType, Function<Cell,Object>>
+			EXCEL_CELL_VALUE = new EnumMap<>(CellType.class);
 
-    	    //get the total number of columns in the file
-    	    int noOfColumns = firstSheet.getRow(0).getPhysicalNumberOfCells();
-    	    
-    	    while (iterator.hasNext()) {
-    	        Row nextRow = iterator.next();
-    	        
-    	    	// Not creating Book object for header  
-    	        if(nextRow.getRowNum()==0)  
-    	         continue;
-    	         
-    	        Iterator<Cell> cellIterator = nextRow.cellIterator();
-    	        Book b = new Book();
-    	 
-    	        while (cellIterator.hasNext()) {
-    	            Cell nextCell = cellIterator.next();
-    	            int columnIndex = nextCell.getColumnIndex();
-    	           
-    	          switch (columnIndex+1) {    	            	          
-    	          case 2:
-    	               b.setTitle((String) getCellValue(nextCell));
-    	                break;
-    	            case 3:
-    	                b.setAuthor((String) getCellValue(nextCell));
-    	                break;  
-    	             case 4:
-    	            	b.setPrice((Double) getCellValue(nextCell));
-    	            	break; 
-    	                   	                
-    	            }
-    	 
-    	        }
-    	        listb.add(b);
-    	    }
-        	
-        	
-        }else{
-        	listb=null;
-        }	 
-	    workbook.close();
-	    inputStream.close();
-	 
-	    return listb;
+	static {
+		EXCEL_CELL_VALUE.put(CellType.BLANK, null);
+		EXCEL_CELL_VALUE.put(CellType.BOOLEAN, Cell::getBooleanCellValue);
+		EXCEL_CELL_VALUE.put(CellType.STRING, Cell::getStringCellValue);
+		EXCEL_CELL_VALUE.put(CellType.NUMERIC, cell -> {
+			if (DateUtil.isCellDateFormatted(cell)) {
+				return cell.getDateCellValue();
+			} else {
+				return cell.getNumericCellValue();
+			}
+		});
 	}
 	
 	
-	
-	public Workbook getWorkbook(String excelFilePath){
-	    Workbook workbook = null;
-	 
-	    try{
-	    	 if (excelFilePath.endsWith("xlsx")) {
-	        workbook = new XSSFWorkbook();
-	    } else if (excelFilePath.endsWith("xls")) {
-	        workbook = new HSSFWorkbook();
-	    } else {
-	        throw new IllegalArgumentException("The specified file is not Excel file");
-	    }
-	    }catch(Exception e){
-	    	System.out.println("The specified file is not Excel file");
-	    }
-	    	 
-	    return workbook;
+	/**
+	 * read all row in Excel file
+	 * @param excelFilePath path of file
+	 * @return list of {@link Book}
+	 */
+	public List<Book> readBookFromExcelFile(String excelFilePath) {
+		List<Book> bookList = new ArrayList<>();
+
+		try (Workbook workbook = getWorkbook(excelFilePath)) {
+
+			Sheet sheet = workbook.getSheetAt(0);
+
+			//get header number
+			Row header = sheet.getRow(0);
+			String headeridNumber = header.getCell(0).getStringCellValue();
+			String headerTitleNumber = header.getCell(1).getStringCellValue();
+			String headerAuthorNumber = header.getCell(2).getStringCellValue();
+			String headerPriceNumber = header.getCell(3).getStringCellValue();
+
+
+			if (headeridNumber.equalsIgnoreCase("Id")
+					&& headerTitleNumber.equalsIgnoreCase("Title")
+					&& headerAuthorNumber.equalsIgnoreCase("Author")
+					&& headerPriceNumber.equalsIgnoreCase("Price")) {
+
+				sheet.forEach(row -> {
+					// skip header
+					if (row.getRowNum() != 0){
+						bookList.add(transformer(row));
+					}
+				});
+
+			} else {
+				throw new ExcelFileException("File not compatible. please verify the columns name");
+			}
+
+			return bookList;
+		} catch (IOException e) {
+			throw new ExcelFileException("Cannot read the file: "+ e.getMessage());
+		}
 	}
-	
-	@SuppressWarnings("deprecation")
+	/**
+	 * @param excelFilePath path of file
+	 * @return Workbook
+	 */
+	private Workbook getWorkbook(String excelFilePath){
+		Workbook workbook;
+
+		try{
+			try (FileInputStream inputStream = new FileInputStream(new File(excelFilePath))) {
+				if (excelFilePath.endsWith("xlsx")) {
+					workbook = new XSSFWorkbook(inputStream);
+				} else {
+					throw new ExcelFileException("The specified file is not Excel file");
+				}
+			}
+		}catch(SecurityException | IOException  e){
+			throw new ExcelFileException("The specified file is not Excel file");
+		}
+
+		return workbook;
+	}
+
+
+	/**
+	 * transform excel row in Book object
+	 * @param excelRoow excel file row
+	 * @return object of {@link Book}
+	 */
+	private Book transformer(Row excelRoow){
+		Book book = new Book();
+		book.setTitle((String) getCellValue(excelRoow.getCell(1)));
+		book.setAuthor((String) getCellValue(excelRoow.getCell(2)));
+		book.setPrice((Double) getCellValue(excelRoow.getCell(3)));
+
+		return book;
+	}
+
+	/**
+	 * @param cell Row cell
+	 * @return Object row
+	 */
 	private Object getCellValue(Cell cell) {
-	    switch (cell.getCellType()) {
-	    case Cell.CELL_TYPE_STRING:
-	        return cell.getStringCellValue();
-	 
-	    case Cell.CELL_TYPE_BOOLEAN:
-	        return cell.getBooleanCellValue();
-	 
-	    case Cell.CELL_TYPE_NUMERIC:
-	        return cell.getNumericCellValue();
-	    }
-	 
-	    return null;
+		try{
+			return EXCEL_CELL_VALUE.get(cell.getCellTypeEnum()).apply(cell);
+		}catch (Exception e){
+			LOGGER.log(Level.WARNING, String.format("Cannot get cell value %s", e.getMessage()));
+			return null;
+		}
 	}
 	
 ```
