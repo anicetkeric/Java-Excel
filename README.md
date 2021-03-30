@@ -191,91 +191,97 @@ CREATE TABLE IF NOT EXISTS `book` (
 ```java
 
 	
-	
-	public void writeBookListToFile(String fileName, List<Book> BookList) throws Exception{
-		Workbook workbook = null;
-		
-		workbook=getWorkbook(fileName);
-		
-		
-		if(workbook!=null){
+/**
+	 * @param excelFilePath Excel file path
+	 * @param books list of books
+	 */
+	public void writeBookListToFile(String excelFilePath, List<Book> books) {
+
+		try (XSSFWorkbook workbook = new XSSFWorkbook()) {
 			Sheet sheet = workbook.createSheet("Book");
 			createHeaderRow(sheet);
-			Iterator<Book> iterator = BookList.iterator();
-			
+			Iterator<Book> iterator = books.iterator();
+
 			int rowIndex = 1;
 			while(iterator.hasNext()){
-				Book Book = iterator.next();
+				Book book = iterator.next();
 				Row row = sheet.createRow(rowIndex++);
 				Cell cell0 = row.createCell(0);
-				cell0.setCellValue(Book.getId());
+				cell0.setCellValue(book.getId());
 				Cell cell1 = row.createCell(1);
-				cell1.setCellValue(Book.getTitle());
+				cell1.setCellValue(book.getTitle());
 				Cell cell2 = row.createCell(2);
-				cell2.setCellValue(Book.getAuthor());
+				cell2.setCellValue(book.getAuthor());
 				Cell cell3 = row.createCell(3);
-				cell3.setCellValue(Book.getPrice());
+				cell3.setCellValue(book.getPrice());
 			}
-			
+
 			//lets write the excel data to file now
-		    try (FileOutputStream outputStream = new FileOutputStream(fileName)) {
-		        workbook.write(outputStream);
-		        outputStream.close();
-		        System.out.println(fileName + " written successfully");	
-		    }
-				
+			try (FileOutputStream outputStream = new FileOutputStream(excelFilePath)) {
+				workbook.write(outputStream);
+				LOGGER.log(Level.INFO, "File written successfully");
+			}
 		}
-		
+		catch (IOException e) {
+		throw new ExcelFileException("Cannot read the file: "+ e.getMessage());
+		}
 	}
-	
-	
+
+
+	/**
+	 * Create header in Excel file
+	 * @param sheet Excel sheet
+	 */
 	private void createHeaderRow(Sheet sheet) {
-		 
-	    CellStyle cellStyle = sheet.getWorkbook().createCellStyle();
-	    Font font = sheet.getWorkbook().createFont();
-	    font.setBold(true);
-	    font.setFontHeightInPoints((short) 12);
-	    cellStyle.setFont(font);
-	 
-	    
-	    cellStyle.setAlignment(HorizontalAlignment.CENTER);
-	    
-	    
-	    Row row = sheet.createRow(0);
-	    Cell cellId = row.createCell(0);	 
-	    cellId.setCellStyle(cellStyle);
-	    cellId.setCellValue("Id");
-	    
-	    Cell cellTitle = row.createCell(1);	 
-	    cellTitle.setCellStyle(cellStyle);
-	    cellTitle.setCellValue("Title");
-	 
-	    Cell cellAuthor = row.createCell(2);
-	    cellAuthor.setCellStyle(cellStyle);
-	    cellAuthor.setCellValue("Author");
-	 
-	    Cell cellPrice = row.createCell(3);
-	    cellPrice.setCellStyle(cellStyle);
-	    cellPrice.setCellValue("Price");
+
+		CellStyle cellStyle = sheet.getWorkbook().createCellStyle();
+		Font font = sheet.getWorkbook().createFont();
+		font.setBold(true);
+		font.setFontHeightInPoints((short) 12);
+		cellStyle.setFont(font);
+
+
+		cellStyle.setAlignment(HorizontalAlignment.CENTER);
+
+		Row row = sheet.createRow(0);
+		Cell cellId = row.createCell(0);
+		cellId.setCellStyle(cellStyle);
+		cellId.setCellValue("Id");
+
+		Cell cellTitle = row.createCell(1);
+		cellTitle.setCellStyle(cellStyle);
+		cellTitle.setCellValue("Title");
+
+		Cell cellAuthor = row.createCell(2);
+		cellAuthor.setCellStyle(cellStyle);
+		cellAuthor.setCellValue("Author");
+
+		Cell cellPrice = row.createCell(3);
+		cellPrice.setCellStyle(cellStyle);
+		cellPrice.setCellValue("Price");
 	}
-	
-	
 
 ```
 ##### Output.java
 ```java
 
-metierBook=new BookDao();
-	
-		 try {
-			 	
-		List<Book> listp=metierBook.BookList();
-		 Utiles reader = new Utiles();
-			reader.writeBookListToFile("book.xlsx", listp);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+        private static final String EXCEL_FILE_INPUT_PATH = "book.xlsx";
+	private static final String EXCEL_FILE_OUTPUT_PATH = "book-java.xlsx";
+	private static final IBookDao bookDao = new BookDaoImpl();
+
+	public static void main(String[] args) {
+		writeFile();
+	}
+
+	/**
+	 * read data in database and create new file
+	 */
+	private static void writeFile() {
+		List<Book> books = bookDao.bookList();
+		ExcelFileUtils writer = new ExcelFileUtils();
+		writer.writeBookListToFile(EXCEL_FILE_OUTPUT_PATH, books);
+	}
+
 
 ```
 
