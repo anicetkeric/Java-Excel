@@ -5,7 +5,7 @@ Apache POI – Reading and Writing Excel file with Java using Mysql
 
 Apache POI provides excellent support for working with Microsoft Excel documents. Apache POI is able to handle both XLS and XLSX formats of spreadsheets.
 
-# MYSQL
+# MYSQL DATABASE
  use book_db database
  
 ### Create database and tables
@@ -238,7 +238,6 @@ CREATE TABLE IF NOT EXISTS `book` (
 		font.setBold(true);
 		font.setFontHeightInPoints((short) 12);
 		cellStyle.setFont(font);
-
 
 		cellStyle.setAlignment(HorizontalAlignment.CENTER);
 
